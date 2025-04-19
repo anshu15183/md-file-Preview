@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Markdown Viewer with Dark Mode</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f9f9f9;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    h1 {
+      color: inherit;
+    }
+    #content {
+        margin: 20px auto; /* Center horizontally */
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s, color 0.3s;
+        
+        max-width: 800px; /* 👈 Limit width */
+        width: 100%;      /* Responsive */
+    }
+    #content img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 10px 0;
+      }
+      #content table {
+        width: 100%;
+        border-collapse: collapse; /* Merge borders nicely */
+        margin: 20px 0;
+      }
+      
+      #content th, #content td {
+        border: 1px solid #ccc; /* Light grey border */
+        padding: 8px 12px;
+        text-align: left;
+      }
+      
+      #content th {
+        background-color: #f0f0f0; /* Slightly different background for headers */
+      }
+      body.dark-mode #content th {
+        background-color: #444; /* Dark grey for table headers in dark mode */
+      }
+      body.dark-mode #content td {
+        background-color: #333; /* Slightly dark background for table cells */
+        border-color: #555; /* Adjust border color for dark mode */
+      }
+      body.dark-mode #content table {
+        border-color: #555;
+      }
+                  
+    input[type="file"], button {
+      margin-bottom: 20px;
+    }
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+    }
+    body.dark-mode #content {
+      background: #2c2c2c;
+      color: #f0f0f0;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    button {
+      padding: 8px 16px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <h1>Markdown Viewer</h1>
+    <button id="toggleDarkMode">Toggle Dark Mode</button>
+  </div>
+  
+  <input type="file" id="fileInput" accept=".md">
+  <div id="content">Select a .md file to render it here.</div>
+
+  <!-- Load marked.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const contentDiv = document.getElementById('content');
+    const toggleDarkModeBtn = document.getElementById('toggleDarkMode');
+
+    fileInput.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const markdownText = e.target.result;
+          const html = marked.parse(markdownText);
+          contentDiv.innerHTML = html;
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    toggleDarkModeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
+  </script>
+
+</body>
+</html>
