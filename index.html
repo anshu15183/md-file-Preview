@@ -57,7 +57,7 @@
       margin: 0;
       font-size: 1.5rem;
       margin-bottom: 0;
-      width: auto; /* Changed from 100% */
+      width: auto;
     }
 
     .header-content {
@@ -169,7 +169,6 @@
     .raw-container {
       padding: 15px;
       overflow-y: auto;
-      height: 50vh;
       margin: 10px 0;
       width: 100%;
       background: var(--container-dark);
@@ -178,25 +177,46 @@
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       position: relative;
+      transition: height 0.3s ease, width 0.3s ease;
     }
 
-    @media (min-width: 768px) {
+    /* Default preview container size */
+    .preview-container {
+      height: 30vh;
+    }
 
-      .preview-container,
-      .raw-container {
-        padding: 20px;
-        height: 60vh;
-        margin: 15px 0;
+    /* Full preview mode - no split view */
+    .container:not(.split-view) .preview-container {
+      height: 80vh;
+      width: 96%;
+      margin: 15px auto;
+    }
+
+    /* Split view defaults */
+    .split-view .preview-container,
+    .split-view .raw-container {
+      height: 80vh;
+    }
+
+    /* Desktop split view */
+    @media (min-width: 992px) {
+      .split-view .preview-container,
+      .split-view .raw-container {
+        height: 70vh;
+        width: 48%;
+        margin: 0 1%;
+      }
+
+      .container:not(.split-view) .preview-container {
+        width: 98%;
+        max-width: 1200px;
       }
     }
 
-    @media (min-width: 992px) {
-
-      .split-view .preview-container,
-      .split-view .raw-container {
-        width: 48%;
-        margin: 0 1%;
-        height: 70vh;
+    /* Mobile full preview mode */
+    @media (max-width: 767px) {
+      .container:not(.split-view) .preview-container {
+        height: 80vh;
       }
     }
 
@@ -269,6 +289,7 @@
     .preview-container {
       font-size: 14px;
       line-height: 1.5;
+      padding-left: 30px;
     }
 
     @media (min-width: 768px) {
@@ -310,6 +331,11 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .mobile-controls button:hover {
+      transform: scale(1.1);
     }
 
     @media (min-width: 992px) {
@@ -318,7 +344,7 @@
       }
     }
 
-    /* Styles for hamburger menu */
+    /* Hamburger menu styles */
     .menu-toggle {
       display: none;
       flex-direction: column;
@@ -332,7 +358,7 @@
     }
 
     .menu-toggle span {
-      height: 20px;
+      height: 25px;
       width: 5%;
       background: var(--text-dark);
       border-radius: 3px;
@@ -351,12 +377,18 @@
       width: auto;
       border: 1px solid var(--border-color);
       padding: 10px;
+      animation: slide-down 0.3s ease;
     }
 
-    .header-buttons.open input,
-    .header-buttons.open button {
-      width: 100%;
-      margin-bottom: 5px;
+    @keyframes slide-down {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 767px) {
@@ -381,10 +413,6 @@
       .header-buttons>* {
         margin: 5px;
       }
-
-      header h1 {
-        margin-bottom: 0;
-      }
     }
   </style>
 </head>
@@ -402,7 +430,8 @@
     </div>
     <div class="header-buttons">
       <input type="file" id="fileInput" accept=".md" />
-      <input type="text" id="urlInput" placeholder="URL..." />
+      <input type="text" id="urlInput"
+      placeholder="URL..." />
       <button id="loadUrl">Load URL</button>
       <button id="clearPreview">Clear</button>
       <button id="themeToggle">Light</button>
@@ -453,7 +482,6 @@
 
     function adjustLayoutForScreenSize() {
       if (isSmallScreen && container.classList.contains('split-view')) {
-        // On small screens, make sure both containers are visible but stacked
         if (rawContainer) {
           contentDiv.style.display = 'block';
           rawContainer.style.display = 'block';
@@ -492,7 +520,6 @@
       adjustLayoutForScreenSize();
     }
 
-    // Helper function to count occurrences of a substring
     function countOccurrences(text, subtext) {
       let count = 0;
       let position = 0;
@@ -508,23 +535,18 @@
     function highlightInRaw(selectedText) {
       if (!rawContainer || !selectedText) return;
 
-      // Get the selection info
       const selection = window.getSelection();
       if (selection.rangeCount === 0) return;
 
       const range = selection.getRangeAt(0);
-
-      // Find which line was selected in the preview
       const previewLines = Array.from(contentDiv.querySelectorAll('*')).filter(el =>
         el.textContent.includes(selectedText));
 
       if (previewLines.length === 0) return;
 
-      // Try to determine which specific occurrence was selected
       let selectedLine = '';
       let closestNode = range.startContainer;
 
-      // Walk up the DOM to find a parent with text content
       while (closestNode && (!closestNode.textContent || !closestNode.textContent.includes(selectedText))) {
         if (closestNode === contentDiv) break;
         closestNode = closestNode.parentNode;
@@ -534,12 +556,10 @@
         selectedLine = closestNode.textContent;
       }
 
-      // Find the position of the selected text within the preview
       const previewText = contentDiv.textContent;
       let previewIndex = previewText.indexOf(selectedText);
       let selectedTextOccurrenceInPreview = 1;
 
-      // Count how many occurrences of the text appear before our selection
       if (selectedLine) {
         const lineIndex = previewText.indexOf(selectedLine);
         const selectionInLine = selectedLine.indexOf(selectedText);
@@ -549,7 +569,6 @@
         }
       }
 
-      // Now highlight the same occurrence in the raw text
       const rawText = markdownText;
       let tempIndex = -1;
       let currentOccurrence = 0;
@@ -557,35 +576,25 @@
       let lastEndIndex = 0;
       let highlightStartPosition = -1;
 
-      // Find and highlight the specific occurrence
       while ((tempIndex = rawText.indexOf(selectedText, tempIndex + 1)) !== -1) {
         currentOccurrence++;
         if (currentOccurrence === selectedTextOccurrenceInPreview) {
-          // Save the position for scrolling
           highlightStartPosition = tempIndex;
-          // Add text before this occurrence
           result += rawText.substring(lastEndIndex, tempIndex);
-          // Add the highlighted occurrence with an id for scrolling
           result += `<span id="highlight-target" class="highlight-selection">${selectedText}</span>`;
-          // Update the last end index
           lastEndIndex = tempIndex + selectedText.length;
           break;
         }
       }
 
-      // Add the remaining text
       result += rawText.substring(lastEndIndex);
 
-      // If no specific occurrence was found, try a simpler approach
       if (currentOccurrence === 0) {
-        // Split by lines to preserve formatting
         const rawLines = rawText.split('\n');
         const pattern = new RegExp(`(${selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
 
-        // Just highlight the first match as fallback
         for (let i = 0; i < rawLines.length; i++) {
           if (rawLines[i].includes(selectedText)) {
-            // Record position for scrolling
             highlightStartPosition = rawText.indexOf(rawLines[i]) + rawLines[i].indexOf(selectedText);
             rawLines[i] = rawLines[i].replace(pattern, '<span id="highlight-target" class="highlight-selection">$1</span>');
             break;
@@ -597,7 +606,6 @@
 
       rawContainer.innerHTML = result;
 
-      // Scroll to the highlighted text
       setTimeout(() => {
         const highlightElement = document.getElementById('highlight-target');
         if (highlightElement) {
@@ -609,16 +617,12 @@
       }, 100);
     }
 
-    // Event listener for preview selection
     contentDiv.addEventListener('mouseup', () => {
       let selected = window.getSelection().toString().trim();
       if (selected.length > 0) {
-        // If raw view is not showing, toggle it on
         if (!container.classList.contains('split-view')) {
           toggleRawView();
         }
-
-        // Highlight and scroll to the selection
         highlightInRaw(selected);
       }
     });
@@ -641,7 +645,7 @@
           localStorage.setItem('markdownContent', markdownText);
           if (rawContainer) rawContainer.textContent = markdownText;
           setLoadControlsVisibility(false);
-          headerButtons.classList.remove('open'); // Close menu
+          headerButtons.classList.remove('open');
         };
         reader.onerror = (err) => {
           alert('Error reading file: ' + err.target.error);
@@ -666,7 +670,7 @@
           localStorage.setItem('markdownContent', markdownText);
           if (rawContainer) rawContainer.textContent = markdownText;
           setLoadControlsVisibility(false);
-          headerButtons.classList.remove('open'); // Close menu
+          headerButtons.classList.remove('open');
         })
         .catch(err => {
           alert('Error loading URL: ' + err.message);
@@ -721,7 +725,5 @@
       }
     });
   </script>
-
 </body>
-
 </html>
