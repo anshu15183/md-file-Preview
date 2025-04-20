@@ -1,15 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown Previewer</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <style>
+    :root {
+      --bg-dark: #121212;
+      --bg-light: #ffffff;
+      --text-dark: #ffffff;
+      --text-light: #000000;
+      --container-dark: #1e1e1e;
+      --container-light: #f9f9f9;
+      --raw-dark: #2b2b2b;
+      --raw-light: #f0f0f0;
+      --primary: #007bff;
+      --primary-hover: #0056b3;
+      --header-bg: #333;
+      --border-color: #ddd;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #121212;
-      color: #ffffff;
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
       margin: 0;
       padding: 0;
       min-height: 100vh;
@@ -17,229 +40,688 @@
       flex-direction: column;
       transition: background-color 0.3s, color 0.3s;
     }
+
     header {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       padding: 1rem;
-      background: #333;
+      background: var(--header-bg);
       position: sticky;
       top: 0;
       z-index: 100;
     }
+
     header h1 {
       margin: 0;
       font-size: 1.5rem;
+      margin-bottom: 0;
+      width: auto; /* Changed from 100% */
     }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .header-content {
+        width: auto;
+      }
+    }
+
     .header-buttons {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
+      width: 100%;
     }
-    input, button {
-      padding: 10px;
+
+    @media (min-width: 768px) {
+      .header-buttons {
+        width: auto;
+        flex-wrap: nowrap;
+      }
+    }
+
+    input,
+    button {
+      padding: 8px;
       border-radius: 5px;
       border: none;
       cursor: pointer;
+      font-size: 14px;
     }
-    #fileInput, #clearPreview, #themeToggle, #urlInput, #loadUrl {
-      background-color: #007bff;
+
+    @media (min-width: 768px) {
+
+      input,
+      button {
+        padding: 10px;
+        font-size: 16px;
+      }
+    }
+
+    button {
+      background-color: var(--primary);
       color: white;
       transition: background-color 0.3s;
+      white-space: nowrap;
+      flex-grow: 1;
     }
-    #fileInput:hover, #clearPreview:hover, #themeToggle:hover, #loadUrl:hover {
-      background-color: #0056b3;
+
+    @media (min-width: 768px) {
+      button {
+        flex-grow: 0;
+      }
     }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
     #urlInput {
       background: white;
       color: black;
-      min-width: 200px;
+      flex-grow: 3;
+      min-width: 100px;
     }
-    .preview-container {
-      padding: 20px;
-      background: #1e1e1e;
-      color: white;
+
+    #fileInput {
+      width: 100%;
+      padding: 5px;
+    }
+
+    @media (min-width: 768px) {
+      #fileInput {
+        width: auto;
+      }
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 10px;
+    }
+
+    @media (min-width: 992px) {
+      .container {
+        padding: 20px;
+      }
+    }
+
+    .split-view {
+      flex-direction: column;
+    }
+
+    @media (min-width: 992px) {
+      .split-view {
+        flex-direction: row;
+      }
+    }
+
+    .preview-container,
+    .raw-container {
+      padding: 15px;
       overflow-y: auto;
-      height: 70vh;
-      margin: 20px auto;
-      width: 90%;
-      max-width: 800px;
-      border: 1px solid #ddd;
-      border-radius: 15px;
+      height: 50vh;
+      margin: 10px 0;
+      width: 100%;
+      background: var(--container-dark);
+      color: var(--text-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       position: relative;
     }
+
+    @media (min-width: 768px) {
+
+      .preview-container,
+      .raw-container {
+        padding: 20px;
+        height: 60vh;
+        margin: 15px 0;
+      }
+    }
+
+    @media (min-width: 992px) {
+
+      .split-view .preview-container,
+      .split-view .raw-container {
+        width: 48%;
+        margin: 0 1%;
+        height: 70vh;
+      }
+    }
+
+    .raw-container {
+      background: var(--raw-dark);
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    body.light-mode {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+    }
+
+    body.light-mode .preview-container {
+      background: var(--container-light);
+      color: var(--text-light);
+    }
+
+    body.light-mode .raw-container {
+      background: var(--raw-light);
+      color: var(--text-light);
+    }
+
+    .highlight-selection {
+      background-color: rgb(0, 208, 255);
+      color: black;
+    }
+
     .loading-spinner {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       border: 4px solid transparent;
-      border-top: 4px solid #007bff;
+      border-top: 4px solid var(--primary);
       border-radius: 50%;
-      width: 50px;
-      height: 50px;
+      width: 40px;
+      height: 40px;
       animation: spin 1s linear infinite;
     }
+
+    @media (min-width: 768px) {
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
     @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
     }
-    body.light-mode {
-      background-color: #ffffff;
-      color: #000000;
+
+    .preview-container img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      margin-top: 10px;
     }
-    body.light-mode .preview-container {
-      background: #ffffff;
-      color: #000000;
+
+    /* Responsive typography */
+    .preview-container {
+      font-size: 14px;
+      line-height: 1.5;
     }
-    #backToTop {
+
+    @media (min-width: 768px) {
+      .preview-container {
+        font-size: 16px;
+        line-height: 1.6;
+      }
+    }
+
+    .preview-container h1 {
+      font-size: 1.8em;
+      margin-bottom: 0.5em;
+    }
+
+    .preview-container h2 {
+      font-size: 1.5em;
+      margin-bottom: 0.5em;
+    }
+
+    /* Mobile-specific buttons */
+    .mobile-controls {
       position: fixed;
-      right: 20px;
       bottom: 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .mobile-controls button {
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
-      padding: 15px;
+      background-color: var(--primary);
+      color: white;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (min-width: 992px) {
+      .mobile-controls {
+        display: none;
+      }
+    }
+
+    /* Styles for hamburger menu */
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: space-around;
+      width: 30px;
+      height: 25px;
+      background: transparent;
+      border: none;
       cursor: pointer;
-      display: none;
-      font-size: 24px;
-      transition: background-color 0.3s, transform 0.3s;
-      z-index: 9999;
+      padding: 0;
     }
-    #backToTop:hover {
-      background-color: #0056b3;
-      transform: scale(1.1);
+
+    .menu-toggle span {
+      height: 20px;
+      width: 5%;
+      background: var(--text-dark);
+      border-radius: 3px;
+      transition: all 0.3s linear;
+      position: fixed;
+      right: 5%;
     }
-    .preview-container::-webkit-scrollbar {
-      width: 15px;
+
+    .header-buttons.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--header-bg);
+      width: auto;
+      border: 1px solid var(--border-color);
+      padding: 10px;
     }
-    .preview-container::-webkit-scrollbar-thumb {
-      background-color: #888;
-      border-radius: 10px;
-      border: 3px solid #444;
+
+    .header-buttons.open input,
+    .header-buttons.open button {
+      width: 100%;
+      margin-bottom: 5px;
     }
-    .preview-container::-webkit-scrollbar-track {
-      background: #333;
-      border-radius: 10px;
-    }
-    .preview-container::-webkit-scrollbar-button {
-      display: none;
+
+    @media (max-width: 767px) {
+      .header-buttons {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--header-bg);
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        width: auto;
+      }
+
+      .menu-toggle {
+        display: flex;
+      }
+
+      .header-buttons>* {
+        margin: 5px;
+      }
+
+      header h1 {
+        margin-bottom: 0;
+      }
     }
   </style>
 </head>
 
 <body class="dark-mode">
 
-<header>
-  <h1>Markdown Previewer</h1>
-  <div class="header-buttons">
-    <input type="file" id="fileInput" accept=".md" />
-    <input type="text" id="urlInput" placeholder="Paste .md URL here..." />
-    <button id="loadUrl">Load from URL</button>
-    <button id="clearPreview">Clear Preview</button>
-    <button id="themeToggle">Light Mode</button>
+  <header>
+    <div class="header-content">
+      <h1>Markdown Previewer</h1>
+      <button class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div class="header-buttons">
+      <input type="file" id="fileInput" accept=".md" />
+      <input type="text" id="urlInput" placeholder="URL..." />
+      <button id="loadUrl">Load URL</button>
+      <button id="clearPreview">Clear</button>
+      <button id="themeToggle">Light</button>
+      <button id="toggleRaw">Raw</button>
+    </div>
+  </header>
+
+  <div class="container" id="container">
+    <div class="preview-container" id="content">
+      <div class="loading-spinner" id="spinner"></div>
+    </div>
   </div>
-</header>
 
-<div class="preview-container" id="content">
-  <!-- Spinner will be shown while loading -->
-  <div class="loading-spinner" id="spinner"></div>
-</div>
-<button id="backToTop">↑</button>
+  <div class="mobile-controls">
+    <button id="scrollTopBtn">&uarr;</button>
+    <button id="scrollBottomBtn">&darr;</button>
+  </div>
 
-<script>
-  const contentDiv = document.getElementById('content');
-  const fileInput = document.getElementById('fileInput');
-  const clearPreviewBtn = document.getElementById('clearPreview');
-  const themeToggleBtn = document.getElementById('themeToggle');
-  const backToTopBtn = document.getElementById('backToTop');
-  const urlInput = document.getElementById('urlInput');
-  const loadUrlBtn = document.getElementById('loadUrl');
-  const spinner = document.getElementById('spinner');
+  <script>
+    const container = document.getElementById('container');
+    const contentDiv = document.getElementById('content');
+    const fileInput = document.getElementById('fileInput');
+    const clearPreviewBtn = document.getElementById('clearPreview');
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const urlInput = document.getElementById('urlInput');
+    const loadUrlBtn = document.getElementById('loadUrl');
+    const toggleRawBtn = document.getElementById('toggleRaw');
+    const spinner = document.getElementById('spinner');
+    const scrollTopBtn = document.getElementById('scrollTopBtn');
+    const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+    const headerButtons = document.querySelector('.header-buttons');
+    const menuToggle = document.getElementById('menuToggle');
 
-  function renderMarkdown(text) {
-    contentDiv.innerHTML = marked.parse(text);
-    document.querySelectorAll('pre code').forEach((block) => {
-      hljs.highlightElement(block);
+    let rawContainer = null;
+    let markdownText = '';
+    let isSmallScreen = window.innerWidth < 768;
+
+    // Hamburger menu toggle
+    menuToggle.addEventListener('click', () => {
+      headerButtons.classList.toggle('open');
     });
-    spinner.style.display = 'none'; // Hide spinner after rendering
-  }
 
-  fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file && file.name.endsWith('.md')) {
-      const reader = new FileReader();
-      spinner.style.display = 'block'; // Show spinner while loading
-      reader.onload = () => {
-        const markdownText = reader.result;
-        renderMarkdown(markdownText);
-        localStorage.setItem('markdownContent', markdownText);
-      };
-      reader.onerror = (err) => {
-        alert('Error reading file: ' + err.target.error);
-        spinner.style.display = 'none'; // Hide spinner in case of error
-      };
-      reader.readAsText(file, 'UTF-8');
-    } else {
-      alert('Please upload a valid .md file.');
-    }
-  });
+    // Check screen size on resize
+    window.addEventListener('resize', () => {
+      isSmallScreen = window.innerWidth < 768;
+      adjustLayoutForScreenSize();
+    });
 
-  clearPreviewBtn.addEventListener('click', () => {
-    contentDiv.innerHTML = '';
-    localStorage.removeItem('markdownContent');
-  });
-
-  themeToggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('light-mode');
-    themeToggleBtn.textContent = document.body.classList.contains('light-mode') ? 'Dark Mode' : 'Light Mode';
-  });
-
-  contentDiv.addEventListener('scroll', () => {
-    if (contentDiv.scrollTop > 20) {
-      backToTopBtn.style.display = 'block';
-    } else {
-      backToTopBtn.style.display = 'none';
-    }
-  });
-
-  backToTopBtn.addEventListener('click', () => {
-    contentDiv.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  window.addEventListener('load', () => {
-    const savedMarkdown = localStorage.getItem('markdownContent');
-    if (savedMarkdown) {
-      spinner.style.display = 'block'; // Show spinner while loading from local storage
-      setTimeout(() => {
-        renderMarkdown(savedMarkdown);
-      }, 500); // Small delay to show loading nicely
-    }
-  });
-
-  loadUrlBtn.addEventListener('click', async () => {
-    const url = urlInput.value.trim();
-    if (url) {
-      try {
-        spinner.style.display = 'block'; // Show spinner while loading from URL
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const text = await response.text();
-        renderMarkdown(text);
-        localStorage.setItem('markdownContent', text);
-      } catch (err) {
-        alert('Error loading markdown from URL: ' + err.message);
-        spinner.style.display = 'none'; // Hide spinner in case of error
+    function adjustLayoutForScreenSize() {
+      if (isSmallScreen && container.classList.contains('split-view')) {
+        // On small screens, make sure both containers are visible but stacked
+        if (rawContainer) {
+          contentDiv.style.display = 'block';
+          rawContainer.style.display = 'block';
+        }
       }
-    } else {
-      alert('Please enter a valid URL.');
     }
-  });
-</script>
+
+    function renderMarkdown(text) {
+      contentDiv.innerHTML = marked.parse(text);
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+      spinner.style.display = 'none';
+    }
+
+    function createRawContainer() {
+      rawContainer = document.createElement('div');
+      rawContainer.className = 'raw-container';
+      rawContainer.id = 'rawContent';
+      rawContainer.textContent = markdownText;
+      container.appendChild(rawContainer);
+    }
+
+    function toggleRawView() {
+      container.classList.toggle('split-view');
+
+      if (container.classList.contains('split-view')) {
+        if (!rawContainer) createRawContainer();
+        rawContainer.style.display = 'block';
+        toggleRawBtn.textContent = isSmallScreen ? 'Hide' : 'Hide Raw';
+      } else {
+        if (rawContainer) rawContainer.style.display = 'none';
+        toggleRawBtn.textContent = isSmallScreen ? 'Raw' : 'Show Raw';
+      }
+
+      adjustLayoutForScreenSize();
+    }
+
+    // Helper function to count occurrences of a substring
+    function countOccurrences(text, subtext) {
+      let count = 0;
+      let position = 0;
+      while (true) {
+        position = text.indexOf(subtext, position);
+        if (position === -1) break;
+        count++;
+        position += subtext.length;
+      }
+      return count;
+    }
+
+    function highlightInRaw(selectedText) {
+      if (!rawContainer || !selectedText) return;
+
+      // Get the selection info
+      const selection = window.getSelection();
+      if (selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+
+      // Find which line was selected in the preview
+      const previewLines = Array.from(contentDiv.querySelectorAll('*')).filter(el =>
+        el.textContent.includes(selectedText));
+
+      if (previewLines.length === 0) return;
+
+      // Try to determine which specific occurrence was selected
+      let selectedLine = '';
+      let closestNode = range.startContainer;
+
+      // Walk up the DOM to find a parent with text content
+      while (closestNode && (!closestNode.textContent || !closestNode.textContent.includes(selectedText))) {
+        if (closestNode === contentDiv) break;
+        closestNode = closestNode.parentNode;
+      }
+
+      if (closestNode && closestNode.textContent) {
+        selectedLine = closestNode.textContent;
+      }
+
+      // Find the position of the selected text within the preview
+      const previewText = contentDiv.textContent;
+      let previewIndex = previewText.indexOf(selectedText);
+      let selectedTextOccurrenceInPreview = 1;
+
+      // Count how many occurrences of the text appear before our selection
+      if (selectedLine) {
+        const lineIndex = previewText.indexOf(selectedLine);
+        const selectionInLine = selectedLine.indexOf(selectedText);
+        if (lineIndex >= 0 && selectionInLine >= 0) {
+          const textBeforeSelection = previewText.substring(0, lineIndex + selectionInLine);
+          selectedTextOccurrenceInPreview = countOccurrences(textBeforeSelection, selectedText) + 1;
+        }
+      }
+
+      // Now highlight the same occurrence in the raw text
+      const rawText = markdownText;
+      let tempIndex = -1;
+      let currentOccurrence = 0;
+      let result = '';
+      let lastEndIndex = 0;
+      let highlightStartPosition = -1;
+
+      // Find and highlight the specific occurrence
+      while ((tempIndex = rawText.indexOf(selectedText, tempIndex + 1)) !== -1) {
+        currentOccurrence++;
+        if (currentOccurrence === selectedTextOccurrenceInPreview) {
+          // Save the position for scrolling
+          highlightStartPosition = tempIndex;
+          // Add text before this occurrence
+          result += rawText.substring(lastEndIndex, tempIndex);
+          // Add the highlighted occurrence with an id for scrolling
+          result += `<span id="highlight-target" class="highlight-selection">${selectedText}</span>`;
+          // Update the last end index
+          lastEndIndex = tempIndex + selectedText.length;
+          break;
+        }
+      }
+
+      // Add the remaining text
+      result += rawText.substring(lastEndIndex);
+
+      // If no specific occurrence was found, try a simpler approach
+      if (currentOccurrence === 0) {
+        // Split by lines to preserve formatting
+        const rawLines = rawText.split('\n');
+        const pattern = new RegExp(`(${selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
+
+        // Just highlight the first match as fallback
+        for (let i = 0; i < rawLines.length; i++) {
+          if (rawLines[i].includes(selectedText)) {
+            // Record position for scrolling
+            highlightStartPosition = rawText.indexOf(rawLines[i]) + rawLines[i].indexOf(selectedText);
+            rawLines[i] = rawLines[i].replace(pattern, '<span id="highlight-target" class="highlight-selection">$1</span>');
+            break;
+          }
+        }
+
+        result = rawLines.join('\n');
+      }
+
+      rawContainer.innerHTML = result;
+
+      // Scroll to the highlighted text
+      setTimeout(() => {
+        const highlightElement = document.getElementById('highlight-target');
+        if (highlightElement) {
+          highlightElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      }, 100);
+    }
+
+    // Event listener for preview selection
+    contentDiv.addEventListener('mouseup', () => {
+      let selected = window.getSelection().toString().trim();
+      if (selected.length > 0) {
+        // If raw view is not showing, toggle it on
+        if (!container.classList.contains('split-view')) {
+          toggleRawView();
+        }
+
+        // Highlight and scroll to the selection
+        highlightInRaw(selected);
+      }
+    });
+
+    function setLoadControlsVisibility(visible) {
+      const displayValue = visible ? '' : 'none';
+      fileInput.style.display = displayValue;
+      urlInput.style.display = displayValue;
+      loadUrlBtn.style.display = displayValue;
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && file.name.endsWith('.md')) {
+        const reader = new FileReader();
+        spinner.style.display = 'block';
+        reader.onload = () => {
+          markdownText = reader.result;
+          renderMarkdown(markdownText);
+          localStorage.setItem('markdownContent', markdownText);
+          if (rawContainer) rawContainer.textContent = markdownText;
+          setLoadControlsVisibility(false);
+          headerButtons.classList.remove('open'); // Close menu
+        };
+        reader.onerror = (err) => {
+          alert('Error reading file: ' + err.target.error);
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    loadUrlBtn.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (!url) return;
+
+      spinner.style.display = 'block';
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.text();
+        })
+        .then(text => {
+          markdownText = text;
+          renderMarkdown(markdownText);
+          localStorage.setItem('markdownContent', markdownText);
+          if (rawContainer) rawContainer.textContent = markdownText;
+          setLoadControlsVisibility(false);
+          headerButtons.classList.remove('open'); // Close menu
+        })
+        .catch(err => {
+          alert('Error loading URL: ' + err.message);
+        })
+        .finally(() => {
+          spinner.style.display = 'none';
+        });
+    });
+
+    clearPreviewBtn.addEventListener('click', () => {
+      markdownText = '';
+      contentDiv.innerHTML = '';
+      if (rawContainer) rawContainer.textContent = '';
+      container.classList.remove('split-view');
+      toggleRawBtn.textContent = isSmallScreen ? 'Raw' : 'Show Raw';
+      setLoadControlsVisibility(true);
+      fileInput.value = '';
+      urlInput.value = '';
+      localStorage.removeItem('markdownContent');
+    });
+
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      themeToggleBtn.textContent = document.body.classList.contains('light-mode') ? 'Dark' : 'Light';
+    });
+
+    toggleRawBtn.addEventListener('click', toggleRawView);
+
+    scrollTopBtn.addEventListener('click', () => {
+      contentDiv.scrollTo({ top: 0, behavior: 'smooth' });
+      if (rawContainer) {
+        rawContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    scrollBottomBtn.addEventListener('click', () => {
+      contentDiv.scrollTo({ top: contentDiv.scrollHeight, behavior: 'smooth' });
+      if (rawContainer) {
+        rawContainer.scrollTo({ top: rawContainer.scrollHeight, behavior: 'smooth' });
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedMarkdown = localStorage.getItem('markdownContent');
+      if (savedMarkdown && savedMarkdown.trim().length > 0) {
+        markdownText = savedMarkdown;
+        renderMarkdown(markdownText);
+        if (rawContainer) rawContainer.textContent = markdownText;
+        setLoadControlsVisibility(false);
+      } else {
+        setLoadControlsVisibility(true);
+      }
+    });
+  </script>
 
 </body>
+
 </html>
