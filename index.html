@@ -17,9 +17,9 @@
       flex-direction: column;
       transition: background-color 0.3s, color 0.3s;
     }
-
     header {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       padding: 1rem;
@@ -28,57 +28,73 @@
       top: 0;
       z-index: 100;
     }
-
     header h1 {
       margin: 0;
       font-size: 1.5rem;
     }
-
     .header-buttons {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
+      align-items: center;
     }
-
-    #fileInput, #clearPreview, #downloadHtml, #themeToggle {
-      margin: 0;
-      padding: 10px 20px;
-      border: none;
+    input, button {
+      padding: 10px;
       border-radius: 5px;
+      border: none;
       cursor: pointer;
+    }
+    #fileInput, #clearPreview, #themeToggle, #urlInput, #loadUrl {
       background-color: #007bff;
       color: white;
       transition: background-color 0.3s;
     }
-
-    #fileInput:hover, #downloadHtml:hover, #clearPreview:hover, #themeToggle:hover {
+    #fileInput:hover, #clearPreview:hover, #themeToggle:hover, #loadUrl:hover {
       background-color: #0056b3;
     }
-
+    #urlInput {
+      background: white;
+      color: black;
+      min-width: 200px;
+    }
     .preview-container {
       padding: 20px;
       background: #1e1e1e;
       color: white;
-      height: 70vh;
       overflow-y: auto;
-      border: 1px solid #ddd;
-      width: 50%;
+      height: 70vh;
       margin: 20px auto;
-        border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        transition: background-color 0.3s, color 0.3s;
-
+      width: 90%;
+      max-width: 800px;
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      position: relative;
     }
-
+    .loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 4px solid transparent;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
     body.light-mode {
       background-color: #ffffff;
       color: #000000;
     }
-
     body.light-mode .preview-container {
       background: #ffffff;
       color: #000000;
     }
-
     #backToTop {
       position: fixed;
       right: 20px;
@@ -94,147 +110,136 @@
       transition: background-color 0.3s, transform 0.3s;
       z-index: 9999;
     }
-
     #backToTop:hover {
       background-color: #0056b3;
       transform: scale(1.1);
     }
-
-    .preview-container {
-        padding: 20px;
-        background: #1e1e1e;
-        color: white;
-        height: 70vh;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        width: 60%;
-        margin: 20px auto;
-        border-radius: 10px;  /* Optional: Add a border radius to the container */
-      }
-      
-      /* Styling the scrollbar for webkit browsers */
-      .preview-container::-webkit-scrollbar {
-        width: 15px;
-      }
-      
-      .preview-container::-webkit-scrollbar-thumb {
-        height: 50px;
-        background-color: #888;
-        border-radius: 10px;  /* Rounded corners for the scrollbar thumb */
-        border: 3px solid #444;  /* Optional: a border around the thumb for more contrast */
-      }
-      
-      .preview-container::-webkit-scrollbar-track {
-        background: #333;
-        border-radius: 10px;  /* Rounded corners for the scrollbar track */
-      }
-      
-      .preview-container::-webkit-scrollbar-button {
-        display: none;  /* Hides the scrollbar buttons (up and down) */
-      }
-      
+    .preview-container::-webkit-scrollbar {
+      width: 15px;
+    }
+    .preview-container::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 10px;
+      border: 3px solid #444;
+    }
+    .preview-container::-webkit-scrollbar-track {
+      background: #333;
+      border-radius: 10px;
+    }
+    .preview-container::-webkit-scrollbar-button {
+      display: none;
+    }
   </style>
 </head>
+
 <body class="dark-mode">
-  <header>
-    <h1>Markdown Previewer</h1>
-    <div class="header-buttons">
-      <input type="file" id="fileInput" accept=".md" />
-      <button id="clearPreview">Clear Preview</button>
-      <button id="downloadHtml">Download HTML</button>
-      <button id="themeToggle">Toggle Theme</button>
-    </div>
-  </header>
 
-  <div class="preview-container" id="content"></div>
+<header>
+  <h1>Markdown Previewer</h1>
+  <div class="header-buttons">
+    <input type="file" id="fileInput" accept=".md" />
+    <input type="text" id="urlInput" placeholder="Paste .md URL here..." />
+    <button id="loadUrl">Load from URL</button>
+    <button id="clearPreview">Clear Preview</button>
+    <button id="themeToggle">Light Mode</button>
+  </div>
+</header>
 
-  <button id="backToTop">↑</button>
+<div class="preview-container" id="content">
+  <!-- Spinner will be shown while loading -->
+  <div class="loading-spinner" id="spinner"></div>
+</div>
+<button id="backToTop">↑</button>
 
-  <script>
-    const contentDiv = document.getElementById('content');
-    const fileInput = document.getElementById('fileInput');
-    const clearPreviewBtn = document.getElementById('clearPreview');
-    const downloadHtmlBtn = document.getElementById('downloadHtml');
-    const themeToggleBtn = document.getElementById('themeToggle');
-    const backToTopBtn = document.getElementById('backToTop');
+<script>
+  const contentDiv = document.getElementById('content');
+  const fileInput = document.getElementById('fileInput');
+  const clearPreviewBtn = document.getElementById('clearPreview');
+  const themeToggleBtn = document.getElementById('themeToggle');
+  const backToTopBtn = document.getElementById('backToTop');
+  const urlInput = document.getElementById('urlInput');
+  const loadUrlBtn = document.getElementById('loadUrl');
+  const spinner = document.getElementById('spinner');
 
-    // Function to render markdown content
-    function renderMarkdown(text) {
-      contentDiv.innerHTML = marked.parse(text);
-      document.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-      });
+  function renderMarkdown(text) {
+    contentDiv.innerHTML = marked.parse(text);
+    document.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block);
+    });
+    spinner.style.display = 'none'; // Hide spinner after rendering
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.name.endsWith('.md')) {
+      const reader = new FileReader();
+      spinner.style.display = 'block'; // Show spinner while loading
+      reader.onload = () => {
+        const markdownText = reader.result;
+        renderMarkdown(markdownText);
+        localStorage.setItem('markdownContent', markdownText);
+      };
+      reader.onerror = (err) => {
+        alert('Error reading file: ' + err.target.error);
+        spinner.style.display = 'none'; // Hide spinner in case of error
+      };
+      reader.readAsText(file, 'UTF-8');
+    } else {
+      alert('Please upload a valid .md file.');
     }
+  });
 
-    // Handle file input change (markdown file upload)
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file && file.name.endsWith('.md')) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const markdownText = reader.result;  // Directly use the text content
-          renderMarkdown(markdownText);  // Render the preview directly
-          localStorage.setItem('markdownContent', markdownText);  // Save the content to localStorage
-        };
+  clearPreviewBtn.addEventListener('click', () => {
+    contentDiv.innerHTML = '';
+    localStorage.removeItem('markdownContent');
+  });
 
-        // Handling file read error
-        reader.onerror = (err) => {
-          alert('Error reading file: ' + err.target.error);
-        };
+  themeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    themeToggleBtn.textContent = document.body.classList.contains('light-mode') ? 'Dark Mode' : 'Light Mode';
+  });
 
-        // Read file as text with UTF-8 encoding (this should fix the encoding issues)
-        reader.readAsText(file, 'UTF-8');
-      } else {
-        alert('Please upload a valid .md file.');
-      }
-    });
-
-    // Handle HTML download
-    downloadHtmlBtn.addEventListener('click', () => {
-      const markdownContent = contentDiv.innerHTML;
-      downloadHtmlFile(markdownContent);  // Download the previewed content as HTML file
-    });
-
-    function downloadHtmlFile(content) {
-      const blob = new Blob([content], { type: 'text/html' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'preview.html';
-      link.click();
+  contentDiv.addEventListener('scroll', () => {
+    if (contentDiv.scrollTop > 20) {
+      backToTopBtn.style.display = 'block';
+    } else {
+      backToTopBtn.style.display = 'none';
     }
+  });
 
-    // Handle clear preview
-    clearPreviewBtn.addEventListener('click', () => {
-      contentDiv.innerHTML = '';
-      localStorage.removeItem('markdownContent');  // Remove the saved content from localStorage
-    });
+  backToTopBtn.addEventListener('click', () => {
+    contentDiv.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 
-    // Toggle Dark/Light theme
-    themeToggleBtn.addEventListener('click', () => {
-      document.body.classList.toggle('light-mode');
-    });
+  window.addEventListener('load', () => {
+    const savedMarkdown = localStorage.getItem('markdownContent');
+    if (savedMarkdown) {
+      spinner.style.display = 'block'; // Show spinner while loading from local storage
+      setTimeout(() => {
+        renderMarkdown(savedMarkdown);
+      }, 500); // Small delay to show loading nicely
+    }
+  });
 
-    // Bind the scroll event of the preview container
-    contentDiv.addEventListener('scroll', () => {
-      if (contentDiv.scrollTop > 20) {
-        backToTopBtn.style.display = 'block';  // Show button when scrolled down inside the preview
-      } else {
-        backToTopBtn.style.display = 'none';  // Hide button at the top of the preview
+  loadUrlBtn.addEventListener('click', async () => {
+    const url = urlInput.value.trim();
+    if (url) {
+      try {
+        spinner.style.display = 'block'; // Show spinner while loading from URL
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const text = await response.text();
+        renderMarkdown(text);
+        localStorage.setItem('markdownContent', text);
+      } catch (err) {
+        alert('Error loading markdown from URL: ' + err.message);
+        spinner.style.display = 'none'; // Hide spinner in case of error
       }
-    });
+    } else {
+      alert('Please enter a valid URL.');
+    }
+  });
+</script>
 
-    // Scroll to top functionality
-    backToTopBtn.addEventListener('click', () => {
-      contentDiv.scrollTo({ top: 0, behavior: 'smooth' });  // Scroll the preview area to the top
-    });
-
-    // On page load, check if there is saved markdown content and render it
-    window.addEventListener('load', () => {
-      const savedMarkdown = localStorage.getItem('markdownContent');
-      if (savedMarkdown) {
-        renderMarkdown(savedMarkdown);  // Render the saved markdown content if available
-      }
-    });
-  </script>
 </body>
 </html>
